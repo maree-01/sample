@@ -55,12 +55,16 @@ public function sendOtp(Request $request)
     $accessTokenResponse = $this->getAccessToken();
     Log::info('Access token request sent.');
 
-    // Extract the content from the response
     if ($accessTokenResponse->getStatusCode() === 200) {
         $accessTokenData = json_decode($accessTokenResponse->getContent(), true);
-        $accessToken = $accessTokenData['token'] ?? null;
+        Log::info('Access token data retrieved successfully:', ['token_data' => $accessTokenData]);
+    
+        // Decode the body, which is a JSON string, to access the token
+        $bodyData = json_decode($accessTokenData['body'], true);
+        $accessToken = $bodyData['token'] ?? null;
+    
         Log::info('Access token retrieved successfully:', ['token' => $accessToken]);
-    } else {
+    }else {
         Log::error('Failed to retrieve access token.', [
             'status_code' => $accessTokenResponse->getStatusCode(),
             'response_content' => $accessTokenResponse->getContent(),
@@ -82,7 +86,7 @@ public function sendOtp(Request $request)
         'Payload' => json_encode([
             'aadhar_no' => $aadharNo,
             'access_token' => $accessToken,
-            'action' => 'sendotp'
+            'action' => 'sendOtp'
         ]),
     ];
     Log::info('Preparing to invoke Lambda function with parameters:', $params);
@@ -130,7 +134,13 @@ public function verifyOtp(Request $request)
     }
 
     $accessTokenData = json_decode($accessTokenResponse->getContent(), true);
-    $accessToken = $accessTokenData['token'] ?? null;
+        Log::info('Access token data retrieved successfully:', ['token_data' => $accessTokenData]);
+    
+        // Decode the body, which is a JSON string, to access the token
+        $bodyData = json_decode($accessTokenData['body'], true);
+        $accessToken = $bodyData['token'] ?? null;
+    
+        Log::info('Access token retrieved successfully:', ['token' => $accessToken]);
 
     // Validate inputs
     if (!$otp || !$refId || !$accessToken) {
